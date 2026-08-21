@@ -16,7 +16,7 @@ services:
       - key: AI_PROVIDER
         value: local
       - key: AI_API_KEY
-        sync: false
+        value: ""
       - key: CORS_ORIGINS
         value: "*"
 
