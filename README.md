@@ -83,39 +83,44 @@
 
 ## 🏗 Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        FRONTEND (React + Vite)                  │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────────┐   │
-│  │ Landing  │ │Dashboard │ │ Screen   │ │Candidate Detail  │   │
-│  │  Page    │ │ Overview │ │ Resumes  │ │ (Radar, Tabs)    │   │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────────────┘   │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────────┐   │
-│  │Analytics │ │  Jobs    │ │Shortlist │ │ Compare Matrix   │   │
-│  │  Page    │ │  Page    │ │  Page    │ │    Page          │   │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────────────┘   │
-└────────────────────────┬────────────────────────────────────────┘
-                         │ REST API (JSON)
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     BACKEND (FastAPI + Uvicorn)                  │
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                    API Layer (Routers)                    │    │
-│  │  /api/screen  /api/candidates  /api/jobs  /api/dashboard │    │
-│  └─────────────────────────┬───────────────────────────────┘    │
-│                             │                                    │
-│  ┌──────────────┐  ┌───────▼───────┐  ┌─────────────────────┐  │
-│  │Resume Parser │  │ Hybrid Matcher│  │  LLM Provider       │  │
-│  │  (PyMuPDF)   │  │(Embeddings +  │  │ (OpenAI / Local     │  │
-│  │              │  │ Rule Engine)  │  │  Fallback)          │  │
-│  └──────────────┘  └───────────────┘  └─────────────────────┘  │
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │              Database Layer (SQLAlchemy Async)            │    │
-│  │  Jobs │ Candidates │ Resumes │ ScreeningResults │ Shortlists│
-│  └─────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
+<div align="center">
+
+![System Architecture Diagram](docs/screenshots/architecture_diagram.png)
+
+</div>
+
+```mermaid
+flowchart TD
+    subgraph Frontend["FRONTEND (React + Vite)"]
+        direction TB
+        L[Landing Page]
+        D[Dashboard Overview]
+        S[Screen Resumes]
+        C[Candidate Detail]
+        A[Analytics Page]
+        J[Jobs Page]
+        SH[Shortlist Page]
+        CM[Compare Matrix Page]
+    end
+
+    subgraph Backend["BACKEND (FastAPI + Uvicorn)"]
+        direction TB
+        API[API Layer<br>/api/screen, /api/candidates, /api/jobs, /api/dashboard]
+        
+        subgraph Services["Core Services"]
+            direction LR
+            RP[Resume Parser<br>PyMuPDF]
+            HM[Hybrid Matcher<br>Embeddings + Rules]
+            LLM[LLM Provider<br>OpenAI / Local]
+        end
+        
+        DB[(Database Layer<br>SQLAlchemy Async<br>Jobs, Candidates, Resumes, etc.)]
+        
+        API --> Services
+        Services --> DB
+    end
+
+    Frontend -- "REST API (JSON)" --> Backend
 ```
 
 ### Screening Pipeline Flow
