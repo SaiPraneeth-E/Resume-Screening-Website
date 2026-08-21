@@ -4,19 +4,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Smart Resume Screener & Job Matching Platform"
+    PROJECT_NAME: str = "Smart Resume Screener"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api"
 
-    # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./sql_app.db"
 
-    # AI Configuration
-    AI_PROVIDER: str = "local"  # "openai", "gemini", "anthropic", "local"
+    AI_PROVIDER: str = "local"
     AI_API_KEY: str = ""
     EMBEDDING_MODEL_NAME: str = "all-MiniLM-L6-v2"
 
-    # CORS
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://localhost:3000",
@@ -25,7 +22,6 @@ class Settings(BaseSettings):
         "*"
     ]
 
-    # File uploads
     MAX_FILE_SIZE_MB: int = 10
     ALLOWED_EXTENSIONS: List[str] = [".pdf", ".txt"]
     UPLOAD_DIR: str = "./uploads"
@@ -45,5 +41,4 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Ensure uploads directory exists
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)

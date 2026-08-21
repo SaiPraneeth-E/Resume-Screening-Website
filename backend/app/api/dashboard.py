@@ -11,14 +11,12 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 @router.get("/stats", response_model=DashboardStats)
 async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
-    # Total Resumes Screened & Avg Match Score
     sr_res = await db.execute(select(ScreeningResult))
     all_results = sr_res.scalars().all()
     
     total_screened = len(all_results)
     avg_score = round(sum([r.overall_score for r in all_results]) / total_screened, 1) if total_screened > 0 else 0.0
 
-    # Top Candidate
     top_name = None
     top_score = 0.0
     if all_results:
@@ -29,15 +27,12 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
         if cand:
             top_name = cand.name
 
-    # Shortlisted Count
     sl_res = await db.execute(select(func.count(Shortlist.id)))
     shortlisted_count = sl_res.scalar() or 0
 
-    # Jobs Analyzed
     j_res = await db.execute(select(func.count(Job.id)))
     jobs_count = j_res.scalar() or 0
 
-    # Score Distribution
     dist = {
         "Exceptional (90-100)": 0,
         "Strong (80-89)": 0,
@@ -57,7 +52,6 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
         else:
             dist["Low (<60)"] += 1
 
-    # Top Matched Skills & Skill Gaps Frequency
     all_matched = []
     all_missing = []
     for r in all_results:
@@ -72,7 +66,6 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
     top_matched_skills = [{"skill": k, "count": v} for k, v in matched_counts]
     common_skill_gaps = [{"skill": k, "count": v} for k, v in missing_counts]
 
-    # Recent Screening Sessions
     sess_res = await db.execute(
         select(ScreeningSession).order_by(ScreeningSession.created_at.desc()).limit(5)
     )

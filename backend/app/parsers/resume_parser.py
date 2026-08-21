@@ -1,5 +1,5 @@
 import re
-import fitz  # PyMuPDF
+import fitz
 from typing import Dict, List, Any, Optional
 from app.schemas.schemas import ParsedResume, ContactInfo, EducationItem, ExperienceItem, ProjectItem
 from app.parsers.skill_taxonomy import extract_skills_from_text, normalize_skill
@@ -9,7 +9,6 @@ class ResumeParser:
 
     @staticmethod
     def extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str:
-        """Extract plain text from PDF byte payload using PyMuPDF."""
         try:
             doc = fitz.open(stream=pdf_bytes, filetype="pdf")
             text_chunks = []
@@ -23,29 +22,22 @@ class ResumeParser:
     def extract_contact_info(text: str) -> ContactInfo:
         lines = [line.strip() for line in text.split("\n") if line.strip()]
         
-        # Name heuristic: First non-empty line that doesn't look like header or contact info
         name = "Candidate"
         for line in lines[:10]:
             line_clean = line.strip()
             if not re.search(r"(@|http|www|resume|curriculum|phone|email|mobile|linkedin|github|\+?\d{10})", line_clean, re.IGNORECASE):
-                # Reject locations (e.g., City, State, Country) and addresses
                 if not re.search(r"(,\s*[A-Z]{2}\b|,\s*[A-Z][a-z]+|India|USA|UK|Street|Avenue|Road|Blvd|District|Pradesh)", line_clean, re.IGNORECASE):
-                    # Names don't typically contain numbers
                     if len(line_clean.split()) <= 4 and len(line_clean) < 50 and not re.search(r"\d", line_clean):
-                        # Reject common job titles or professional summaries
                         if not re.search(r"\b(engineer|developer|manager|architect|designer|analyst|consultant|student|graduate|specialist|expert|lead|director|summary|objective|profile)\b", line_clean, re.IGNORECASE):
                             name = line_clean.title()
                             break
 
-        # Email Regex
         email_match = re.search(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", text)
         email = email_match.group(0) if email_match else None
 
-        # Phone Regex
         phone_match = re.search(r"(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}", text)
         phone = phone_match.group(0) if phone_match else None
 
-        # Social Links
         linkedin = None
         github = None
         portfolio = None
@@ -64,7 +56,6 @@ class ResumeParser:
             if "linkedin.com" not in url and "github.com" not in url:
                 portfolio = url
 
-        # Location heuristic
         location = None
         loc_match = re.search(r"\b([A-Z][a-z]+(?: [A-Z][a-z]+)?,\s*(?:[A-Z]{2}|[A-Z][a-z]+))\b", text)
         if loc_match:
@@ -82,10 +73,7 @@ class ResumeParser:
 
     @classmethod
     def parse_resume_text(cls, raw_text: str) -> ParsedResume:
-        """Parse raw resume text into structured JSON schema."""
         contact = cls.extract_contact_info(raw_text)
-        
-        # Segment sections using common resume header regexes
         sections = cls._segment_sections(raw_text)
 
         summary = sections.get("summary", "")
@@ -96,22 +84,11 @@ class ResumeParser:
         certifications_text = sections.get("certifications", "")
         achievements_text = sections.get("achievements", "")
 
-        # Extract normalized skills from the entire text and skills section
         extracted_skills = extract_skills_from_text(raw_text + "\n" + skills_text)
-
-        # Education parsing
         education = cls._parse_education(education_text if education_text else raw_text)
-
-        # Experience parsing
         experience = cls._parse_experience(experience_text if experience_text else raw_text)
-
-        # Projects parsing
         projects = cls._parse_projects(projects_text if projects_text else raw_text)
-
-        # Certifications parsing
         certifications = cls._parse_bullet_list(certifications_text)
-        
-        # Achievements parsing
         achievements = cls._parse_bullet_list(achievements_text)
 
         return ParsedResume(
@@ -191,7 +168,6 @@ class ResumeParser:
                 ))
 
         if not items:
-            # Fallback dynamic search for degree/school keywords in whole text
             lines = text.split("\n")
             for line in lines:
                 l_str = line.strip()
@@ -229,7 +205,6 @@ class ResumeParser:
                 ))
 
         if not items:
-            # Fallback dynamic search for lines that look like work experience (containing years or bullet points)
             lines = text.split("\n")
             for line in lines:
                 l_str = line.strip()

@@ -20,13 +20,11 @@ const apiClient = axios.create({
 });
 
 export const api = {
-  // Health
   getHealth: async () => {
     const res = await apiClient.get('/health');
     return res.data;
   },
 
-  // Jobs
   listJobs: async (): Promise<Job[]> => {
     const res = await apiClient.get('/jobs');
     return res.data;
@@ -43,7 +41,6 @@ export const api = {
     await apiClient.delete(`/jobs/${id}`);
   },
 
-  // Screening
   screenResumes: async (formData: FormData): Promise<ScreeningSessionResponse> => {
     const res = await apiClient.post('/screen', formData, {
       headers: {
@@ -53,7 +50,6 @@ export const api = {
     return res.data;
   },
 
-  // Candidates
   listCandidates: async (params?: {
     search?: string;
     min_score?: number;
@@ -85,13 +81,11 @@ export const api = {
     return res.data;
   },
 
-  // Dashboard
   getDashboardStats: async (): Promise<DashboardStats> => {
     const res = await apiClient.get('/dashboard/stats');
     return res.data;
   },
 
-  // Export
   getExportUrl: (job_id: string) => {
     return `${API_BASE_URL}/export/csv?job_id=${job_id}`;
   }

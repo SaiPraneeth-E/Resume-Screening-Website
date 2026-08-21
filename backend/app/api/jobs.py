@@ -18,7 +18,6 @@ async def create_job(job_in: JobCreate, db: AsyncSession = Depends(get_db)):
         company=job_in.company or "Acme Corp"
     )
     
-    # Merge explicit skills if provided
     if job_in.required_skills:
         parsed_dict["required_skills"] = list(set(parsed_dict["required_skills"] + job_in.required_skills))
     if job_in.preferred_skills:

@@ -66,15 +66,34 @@ def test_hybrid_matching_score():
     raw_resume = """
     Sai Praneeth
     saipraneeth@dev.io
-    SKILLS: Python, FastAPI, React, TypeScript, Docker, PostgreSQL, Machine Learning, PyTorch.
-    EXPERIENCE: Senior AI Engineer at Cognitive Cloud (2022 - Present)
+    
+    SKILLS:
+    Python, FastAPI, React, TypeScript, Docker, PostgreSQL, Machine Learning, PyTorch, AWS.
+    
+    EXPERIENCE:
+    Senior AI Engineer at Cognitive Cloud Inc (2022 - Present)
+    - Built scalable backend services with Python and FastAPI.
+    Senior Developer at Tech Systems (2020 - 2022)
+    - Engineered React frontend and PostgreSQL databases.
+    Developer at Cloud Labs (2018 - 2020)
+    - Managed Docker microservices.
+    
+    PROJECTS:
+    AI Resume Screener Platform
+    - Built platform with Python, FastAPI, React, and PostgreSQL.
+    
+    EDUCATION:
+    Master of Science in Computer Science - Stanford University (2018)
+    
+    CERTIFICATIONS:
+    AWS Certified Solutions Architect
     """
     parsed_res = ResumeParser.parse_resume_text(raw_resume)
 
     job_data = {
         "title": "Senior AI Engineer",
         "company": "Cognitive Cloud",
-        "description": "Building AI backend services",
+        "description": "Building AI backend services with Python, FastAPI and React",
         "required_skills": ["Python", "FastAPI", "React", "Docker", "PostgreSQL"],
         "preferred_skills": ["PyTorch", "AWS"],
         "responsibilities": ["Build backend services in Python and FastAPI"],

@@ -22,11 +22,9 @@ async def screen_resumes(
     files: List[UploadFile] = File(...),
     db: AsyncSession = Depends(get_db)
 ):
-    """Perform end-to-end screening of multiple resumes against a job description."""
     if not files or len(files) == 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="At least one resume file must be uploaded.")
 
-    # 1. Resolve Job
     db_job = None
     if job_id:
         result = await db.execute(select(Job).where(Job.id == job_id))
@@ -70,7 +68,6 @@ async def screen_resumes(
 
     ai_provider = get_ai_provider()
 
-    # 2. Initialize Screening Session
     session = ScreeningSession(job_id=db_job.id, total_resumes=len(files), avg_score=0.0)
     db.add(session)
     await db.flush()
@@ -78,7 +75,6 @@ async def screen_resumes(
     reports: List[CandidateMatchReport] = []
     total_scores_sum = 0.0
 
-    # 3. Process each uploaded resume file
     for upload_file in files:
         fname = upload_file.filename or "resume.pdf"
         file_bytes = await upload_file.read()
@@ -94,10 +90,8 @@ async def screen_resumes(
         if not raw_text or len(raw_text.strip()) < 15:
             continue
 
-        # Parse Resume JSON
         parsed_resume = ResumeParser.parse_resume_text(raw_text)
 
-        # Check or Create Candidate
         cand_email = parsed_resume.candidate.email
         cand_name = parsed_resume.candidate.name or "Candidate"
 
@@ -120,7 +114,6 @@ async def screen_resumes(
             db.add(db_cand)
             await db.flush()
         else:
-            # Update candidate to reflect any better parsed data (e.g. fixed name extraction)
             db_cand.name = cand_name
             if parsed_resume.candidate.phone: db_cand.phone = parsed_resume.candidate.phone
             if parsed_resume.candidate.location: db_cand.location = parsed_resume.candidate.location
@@ -130,7 +123,6 @@ async def screen_resumes(
             if parsed_resume.summary: db_cand.summary = parsed_resume.summary
             await db.flush()
 
-        # Save Resume record
         db_resume = Resume(
             candidate_id=db_cand.id,
             filename=fname,
@@ -140,17 +132,12 @@ async def screen_resumes(
         db.add(db_resume)
         await db.flush()
 
-        # Run Hybrid Match Engine
         breakdown, aux_data = HybridMatcher.calculate_match_score(parsed_resume, job_data_dict)
-
-        # Run AI LLM Explanation Generator with Fallback
         ai_output = await ai_provider.generate_explanation(parsed_resume, job_data_dict, breakdown, aux_data)
 
-        # Apply LLM fit rating to overall score if provided by an LLM (rating is 1-10)
         if ai_output.get("is_llm") and "fit_rating" in ai_output and isinstance(ai_output["fit_rating"], (int, float)):
             breakdown.overall_score = float(ai_output["fit_rating"]) * 10.0
             
-            # Recalibrate category based on the new LLM score
             score = breakdown.overall_score
             if score >= 85:
                 breakdown.score_category = "Strong Fit"
@@ -165,13 +152,11 @@ async def screen_resumes(
                 breakdown.score_category = "Weak Fit"
                 breakdown.recommendation = "Not Recommended"
 
-        # Check shortlist status
         sl_res = await db.execute(
             select(Shortlist).where(Shortlist.candidate_id == db_cand.id, Shortlist.job_id == db_job.id)
         )
         is_shortlisted = sl_res.scalar_one_or_none() is not None
 
-        # Save ScreeningResult
         result_rec = ScreeningResult(
             session_id=session.id,
             candidate_id=db_cand.id,
@@ -218,10 +203,8 @@ async def screen_resumes(
         )
         reports.append(report)
 
-    # Sort reports by overall match score descending
     reports.sort(key=lambda r: r.match_scores.overall_score, reverse=True)
 
-    # Update session average score
     if reports:
         session.avg_score = round(total_scores_sum / len(reports), 1)
         session.total_resumes = len(reports)

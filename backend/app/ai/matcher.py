@@ -5,18 +5,16 @@ from typing import Dict, List, Any, Tuple
 from app.schemas.schemas import ParsedResume, ScoreBreakdown
 from app.core.config import settings
 
-# Lazy sentence-transformers loader with fallback cosine encoder
 _sentence_model = None
+
 
 def get_sentence_model():
     global _sentence_model
     if _sentence_model is None:
         try:
             from sentence_transformers import SentenceTransformer
-            # Load lightweight model
             _sentence_model = SentenceTransformer(settings.EMBEDDING_MODEL_NAME)
-        except Exception as e:
-            print(f"SentenceTransformer load fallback: {e}")
+        except Exception:
             _sentence_model = "FALLBACK"
     return _sentence_model
 
@@ -38,7 +36,6 @@ def get_text_embedding(text: str) -> np.ndarray:
         except Exception:
             pass
 
-    # Simple TF-IDF term vector fallback if model load fails
     words = set(re.findall(r"\w+", text.lower()))
     vocab = sorted(list(words))
     vec = np.zeros(len(vocab))
@@ -55,9 +52,6 @@ class HybridMatcher:
         resume: ParsedResume,
         job_data: Dict[str, Any]
     ) -> Tuple[ScoreBreakdown, Dict[str, Any]]:
-        """Calculate hybrid match score based on deterministic rules and semantic embedding similarity."""
-        
-        # 1. Skill Match Score (Weight: 35%)
         required_skills = set(job_data.get("required_skills", []))
         preferred_skills = set(job_data.get("preferred_skills", []))
         candidate_skills = set(resume.skills)
@@ -78,7 +72,6 @@ class HybridMatcher:
         skill_score = (req_ratio * 75.0) + (pref_ratio * 25.0)
         skill_score = min(100.0, max(0.0, skill_score))
 
-        # 2. Semantic Fit Score (Weight: 25%)
         resume_full_text = f"{resume.summary} {' '.join(resume.skills)} " + \
                            " ".join([f"{e.role} {e.company}" for e in resume.experience]) + \
                            " ".join([p.title or '' for p in resume.projects])
@@ -89,10 +82,8 @@ class HybridMatcher:
         emb_job = get_text_embedding(job_full_text[:1500])
 
         sim = calculate_cosine_similarity(emb_resume, emb_job)
-        # Scale similarity to 0-100 range nicely
         semantic_score = float(min(100.0, max(0.0, (sim + 0.2) * 80.0)))
 
-        # 3. Experience Match Score (Weight: 15%)
         total_roles = len(resume.experience)
         if total_roles >= 3:
             exp_score = 95.0
@@ -103,14 +94,12 @@ class HybridMatcher:
         else:
             exp_score = 0.0
 
-        # Check if job title matches resume experience roles
         if exp_score > 0:
             job_title = job_data.get("title", "").lower()
             role_match = any(job_title in (exp.role or "").lower() for exp in resume.experience)
             if role_match:
                 exp_score = min(100.0, exp_score + 10.0)
 
-        # 4. Project Relevance Score (Weight: 10%)
         if resume.projects:
             project_score = 75.0
             proj_techs = set()
@@ -121,7 +110,6 @@ class HybridMatcher:
         else:
             project_score = 0.0
 
-        # 5. Education Match Score (Weight: 5%)
         if resume.education:
             degrees = " ".join([e.degree or '' for e in resume.education]).lower()
             if "master" in degrees or "ph.d" in degrees or "m.tech" in degrees:
@@ -133,19 +121,16 @@ class HybridMatcher:
         else:
             education_score = 0.0
 
-        # 6. Certification Score (Weight: 5%)
         if resume.certifications:
             cert_score = 90.0
         else:
             cert_score = 0.0
 
-        # 7. Keywords / Responsibilities Score (Weight: 5%)
         keyword_score = 70.0
         matched_keywords = candidate_skills.intersection(set(job_data.get("keywords", [])))
         if job_data.get("keywords"):
             keyword_score = min(100.0, (len(matched_keywords) / len(job_data["keywords"])) * 100.0 + 30.0)
 
-        # Composite Overall Weighted Match Calculation
         overall_score = (
             (skill_score * 0.35) +
             (semantic_score * 0.25) +
@@ -157,7 +142,6 @@ class HybridMatcher:
         )
         overall_score = round(float(overall_score), 1)
 
-        # Categorize Match
         if overall_score >= 90.0:
             category = "Exceptional Fit"
             recommendation = "Strongly Recommended"

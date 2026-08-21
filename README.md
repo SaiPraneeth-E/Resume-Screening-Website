@@ -1,8 +1,6 @@
-<div align="center">
+# Smart Resume Screener
 
-# ✨ Smart Resume Screener — AI Recruiter Platform
-
-### Intelligent Resume Screening & Candidate Evaluation System
+A web application that parses PDF and TXT resumes, compares candidate profiles against job requirements using semantic text embeddings and multi-factor scoring, and generates structured candidate summaries, interview questions, and comparison reports.
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -11,472 +9,231 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org)
 
-<br/>
+## Table of Contents
 
-> An end-to-end AI-powered resume screening web application that parses PDF/TXT resumes, matches them against job descriptions using **NLP semantic embeddings** and **hybrid scoring algorithms**, and provides detailed candidate analytics, gap analysis, interview kits, and recruiter outreach tools.
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Screening Engine](#screening-engine)
+- [API Reference](#api-reference)
+- [Configuration](#configuration)
+- [Deployment](#deployment)
+- [License](#license)
+- [Author](#author)
 
-</div>
+## Features
 
----
+### Resume Parsing and Matching
+- Extracts text from uploaded PDF and TXT documents using PyMuPDF.
+- Parses key sections including contact details, skills, education, work history, projects, and certifications.
+- Normalizes skill variations using a curated taxonomy map.
+- Calculates compatibility scores across seven distinct dimensions: skill overlap, semantic similarity, experience level, project relevance, education, certifications, and keyword presence.
 
-## 📋 Table of Contents
+### Candidate Evaluation
+- Generates verified strengths, identified skill gaps, and suggestions for candidate resume improvement.
+- Displays candidate competency profiles through interactive radar visualizations.
+- Creates customized interview questions based on candidate-specific gaps and background.
+- Generates structured recruiter outreach email drafts.
 
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Architecture](#-architecture)
-- [Project Structure](#-project-structure)
-- [Getting Started](#-getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Backend Setup](#1-backend-setup)
-  - [Frontend Setup](#2-frontend-setup)
-  - [Running the Application](#3-running-the-application)
-- [How It Works](#-how-it-works)
-- [API Reference](#-api-reference)
-- [Screenshots](#-screenshots)
-- [Environment Variables](#-environment-variables)
-- [Deployment](#-deployment)
-- [Contributing](#-contributing)
-- [License](#-license)
-- [Author](#-author)
+### Dashboard and Management
+- Overview dashboard with key metrics, score distributions, and screening activity.
+- Shortlist management to track preferred applicants.
+- Side-by-side comparison matrix for evaluating multiple candidates simultaneously.
+- Job description management with customizable required and preferred skills.
 
----
-
-## 🚀 Features
-
-### Core Screening Engine
-- **📄 PDF & TXT Resume Parsing** — Extracts text from uploaded resumes using PyMuPDF, then parses structured data (name, email, phone, skills, education, experience, projects, certifications)
-- **🧠 Hybrid AI Matching** — Combines deterministic rule-based skill matching with semantic NLP embeddings (Sentence-Transformers) for deep resume-to-job-description similarity scoring
-- **📊 7-Dimension Score Breakdown** — Skill Match, Semantic Fit, Experience, Projects, Education, Certifications, Keywords — each scored independently and weighted into an overall composite score
-- **🤖 LLM-Powered Explanations** — Optional OpenAI GPT integration for human-readable fit justifications; falls back to a deterministic local AI provider when no API key is configured
-
-### Candidate Intelligence
-- **✅ Verified Strengths** — AI-generated list of candidate's proven competencies
-- **❌ Identified Skill Gaps** — Missing required skills explicitly flagged
-- **⚠️ Missing in Resume** — Credentials, metrics, or sections expected but absent (certifications, project details, etc.)
-- **💡 Recommendations to Add** — Actionable suggestions for candidates to improve their resume for the role
-- **📡 Radar Chart Analytics** — Visual 6-axis radar chart for each candidate's competency profile
-- **🎯 Interview Kit Generator** — Auto-generated tailored interview questions based on skill gaps and strengths
-- **📧 Outreach Email Drafter** — One-click recruiter email template generation for shortlisted candidates
-
-### Platform Features
-- **📈 Resume Analytics Dashboard** — Score distribution charts, skill coverage analysis, gap frequency, actionable insights
-- **⭐ Shortlist Management** — Toggle candidates into a shortlist with persistent state
-- **🔄 Compare Matrix** — Side-by-side comparison of 2–4 candidates across all scoring dimensions
-- **💼 Job Management** — Create and manage job descriptions with auto-parsed required/preferred skills
-- **🔍 Global Search** — Search candidates by name, email, skill, or credential
-- **🌙 Dark Theme UI** — Premium glassmorphism dark mode with ambient background animations
-
----
-
-## 🛠 Tech Stack
+## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| **Frontend** | React 18, TypeScript 5, Vite, Tailwind CSS 3.4, Framer Motion, Recharts, Lucide Icons |
-| **Backend** | Python 3.10+, FastAPI, Uvicorn, SQLAlchemy 2.0 (async), Pydantic v2 |
-| **AI/NLP** | Sentence-Transformers (`all-MiniLM-L6-v2`), NumPy, Scikit-Learn, OpenAI GPT (optional) |
-| **Database** | SQLite (dev) / PostgreSQL (prod) via async SQLAlchemy |
-| **PDF Parsing** | PyMuPDF (fitz) |
-| **Deployment** | Docker, Docker Compose, Render, Vercel |
+|---|---|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons, Recharts |
+| Backend | Python 3.10+, FastAPI, Uvicorn, SQLAlchemy Async, Pydantic v2 |
+| NLP and Embeddings | Sentence-Transformers (all-MiniLM-L6-v2), Scikit-Learn, NumPy |
+| Document Parsing | PyMuPDF |
+| Database | SQLite (development) / PostgreSQL (production) |
 
----
-
-## 🏗 Architecture
-
-<div align="center">
-
-![System Architecture Diagram](docs/screenshots/architecture_diagram.png)
-
-</div>
+## Architecture
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["FRONTEND (React + Vite)"]
-        direction TB
-        L[Landing Page]
-        D[Dashboard Overview]
-        S[Screen Resumes]
-        C[Candidate Detail]
-        A[Analytics Page]
-        J[Jobs Page]
-        SH[Shortlist Page]
-        CM[Compare Matrix Page]
+    subgraph Frontend["Frontend (React + Vite)"]
+        Landing[Landing Page]
+        Dash[Dashboard]
+        Screen[Screen Resumes]
+        Cand[Candidate Detail]
+        Analytics[Analytics]
+        Jobs[Job Management]
+        Compare[Compare Matrix]
     end
 
-    subgraph Backend["BACKEND (FastAPI + Uvicorn)"]
-        direction TB
-        API[API Layer<br>/api/screen, /api/candidates, /api/jobs, /api/dashboard]
-        
-        subgraph Services["Core Services"]
-            direction LR
-            RP[Resume Parser<br>PyMuPDF]
-            HM[Hybrid Matcher<br>Embeddings + Rules]
-            LLM[LLM Provider<br>OpenAI / Local]
-        end
-        
-        DB[(Database Layer<br>SQLAlchemy Async<br>Jobs, Candidates, Resumes, etc.)]
-        
-        API --> Services
-        Services --> DB
+    subgraph Backend["Backend (FastAPI)"]
+        API[API Endpoints]
+        Parser[Resume Parser]
+        Matcher[Scoring Engine]
+        Taxonomy[Skill Taxonomy]
+        LLM[Explanation Service]
+        DB[(Database Layer)]
     end
 
-    Frontend -- "REST API (JSON)" --> Backend
+    Frontend --> API
+    API --> Parser
+    API --> Matcher
+    Matcher --> Taxonomy
+    API --> LLM
+    API --> DB
 ```
 
-### Screening Pipeline Flow
-
-```
-Upload Resume (PDF/TXT)
-        │
-        ▼
-  ┌─────────────┐
-  │ Text Extract │  PyMuPDF extracts raw text from PDF bytes
-  └──────┬──────┘
-         ▼
-  ┌─────────────┐
-  │ Parse Resume│  Regex + heuristics extract name, email, skills,
-  │             │  education, experience, projects, certifications
-  └──────┬──────┘
-         ▼
-  ┌──────────────┐
-  │ Skill Taxonomy│  160+ skill aliases normalized to canonical names
-  │ Normalization │  (e.g., "js" → "JavaScript", "k8s" → "Kubernetes")
-  └──────┬───────┘
-         ▼
-  ┌──────────────────┐
-  │ Hybrid Match     │  7 sub-scores computed:
-  │ Engine           │  • Skill Match (35%) — set intersection
-  │                  │  • Semantic Fit (25%) — cosine similarity
-  │                  │  • Experience (15%) — role count + title match
-  │                  │  • Projects (10%) — tech overlap
-  │                  │  • Education (5%) — degree detection
-  │                  │  • Certifications (5%) — presence check
-  │                  │  • Keywords (5%) — keyword coverage
-  └──────┬───────────┘
-         ▼
-  ┌──────────────────┐
-  │ AI Explanation   │  LLM generates: strengths, gaps,
-  │ Generator        │  missing items, recommendations,
-  │                  │  fit justification, experience alignment
-  └──────┬───────────┘
-         ▼
-  ┌──────────────┐
-  │ Save to DB   │  All scores, analysis, and parsed data persisted
-  │ & Return JSON│  JSON response with full candidate match report
-  └──────────────┘
-```
-
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 Resume-Screening-Website/
 ├── backend/
 │   ├── app/
 │   │   ├── ai/
-│   │   │   ├── matcher.py              # Hybrid scoring engine (embeddings + rules)
-│   │   │   ├── llm_provider.py         # LLM provider (OpenAI + local fallback)
+│   │   │   ├── matcher.py
+│   │   │   ├── llm_provider.py
 │   │   │   └── prompts/
-│   │   │       └── explanation.txt     # Prompt template for LLM fit analysis
+│   │   │       └── explanation.txt
 │   │   ├── api/
-│   │   │   ├── screen.py              # POST /api/screen — main screening endpoint
-│   │   │   ├── candidates.py          # CRUD candidates, interview kit, outreach email
-│   │   │   ├── jobs.py                # CRUD job descriptions
-│   │   │   └── dashboard.py           # GET /api/dashboard/stats
+│   │   │   ├── screen.py
+│   │   │   ├── candidates.py
+│   │   │   ├── jobs.py
+│   │   │   ├── export.py
+│   │   │   ├── health.py
+│   │   │   └── dashboard.py
 │   │   ├── core/
-│   │   │   └── config.py              # Pydantic settings (env vars)
+│   │   │   └── config.py
 │   │   ├── database/
-│   │   │   ├── models.py              # SQLAlchemy ORM models
-│   │   │   └── session.py             # Async DB session factory
+│   │   │   ├── models.py
+│   │   │   └── session.py
 │   │   ├── parsers/
-│   │   │   ├── resume_parser.py       # PDF text extraction + structured parsing
-│   │   │   ├── job_parser.py          # Job description parsing
-│   │   │   └── skill_taxonomy.py      # 160+ skill alias normalization map
+│   │   │   ├── resume_parser.py
+│   │   │   ├── job_parser.py
+│   │   │   └── skill_taxonomy.py
 │   │   ├── schemas/
-│   │   │   └── schemas.py             # Pydantic request/response schemas
-│   │   └── main.py                    # FastAPI app entry point, CORS, static mount
+│   │   │   └── schemas.py
+│   │   └── main.py
 │   ├── tests/
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
 │   │   ├── api/
-│   │   │   └── client.ts              # Typed API client (fetch wrapper)
+│   │   │   └── client.ts
 │   │   ├── components/
-│   │   │   ├── common/
-│   │   │   │   ├── AmbientBackground.tsx  # Animated floating orbs background
-│   │   │   │   ├── BrandLogo.tsx          # Brand logo component
-│   │   │   │   ├── ScoreBadge.tsx         # Color-coded score display
-│   │   │   │   └── SkillGroup.tsx         # Matched/missing/additional skills
-│   │   │   └── graphics/
-│   │   │       └── ScoreGaugeGraphic.tsx  # Landing page score gauge
 │   │   ├── layouts/
-│   │   │   └── DashboardLayout.tsx    # Sidebar + header shell layout
 │   │   ├── pages/
-│   │   │   ├── LandingPage.tsx        # Hero landing page
-│   │   │   ├── DashboardPage.tsx      # Overview dashboard with KPI cards
-│   │   │   ├── AnalyticsPage.tsx      # Resume analytics intelligence report
-│   │   │   ├── ScreenPage.tsx         # Upload & screen resumes
-│   │   │   ├── ResultsPage.tsx        # Candidate rankings list
-│   │   │   ├── CandidateDetailPage.tsx # Full candidate dossier (6 tabs)
-│   │   │   ├── ComparePage.tsx        # Side-by-side candidate comparison
-│   │   │   ├── ShortlistedPage.tsx    # Shortlisted candidates view
-│   │   │   └── JobsPage.tsx           # Job descriptions management
 │   │   ├── types/
-│   │   │   └── index.ts              # TypeScript interfaces
-│   │   ├── App.tsx                    # React Router setup
-│   │   ├── main.tsx                   # Vite entry point
-│   │   └── index.css                  # Global styles + design system
+│   │   ├── App.tsx
+│   │   └── main.tsx
 │   ├── tailwind.config.js
 │   ├── tsconfig.json
 │   ├── vite.config.ts
 │   └── package.json
-├── docker/
 ├── docker-compose.yml
-├── .env.example
 ├── render.yaml
-├── vercel.json
-└── README.md
+└── vercel.json
 ```
 
----
-
-## 🏁 Getting Started
+## Getting Started
 
 ### Prerequisites
+- Python 3.10 or higher
+- Node.js 18 or higher
+- npm 9 or higher
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| **Python** | 3.10+ | Backend runtime |
-| **Node.js** | 18+ | Frontend build toolchain |
-| **npm** | 9+ | Package manager |
-| **Git** | 2.30+ | Version control |
-
-### 1. Backend Setup
+### Backend Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/SaiPraneeth-E/Resume-Screening-Website.git
-cd Resume-Screening-Website
-
-# Create Python virtual environment
 cd backend
 python -m venv venv
-
-# Activate virtual environment
-# Windows:
 venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### 2. Frontend Setup
-
-```bash
-# From the project root
-cd frontend
-
-# Install npm dependencies
-npm install
-```
-
-### 3. Running the Application
-
-#### Option A: Development Mode (Recommended)
-
-**Terminal 1 — Start Backend:**
+On Linux or macOS:
 ```bash
 cd backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-**Terminal 2 — Start Frontend Dev Server:**
+### Frontend Setup
+
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
 
-Then open **http://localhost:5173** in your browser.
+The frontend will run at `http://localhost:5173` and the backend will run at `http://localhost:8000`.
 
-#### Option B: Production Build (Single Server)
+## Screening Engine
 
-```bash
-# Build frontend into static files
-cd frontend
-npm run build
+The evaluation engine calculates composite scores using the following weight breakdown:
 
-# The backend serves the built frontend automatically
-cd ../backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
+| Factor | Weight | Evaluation Method |
+|---|---|---|
+| Skill Match | 35% | Exact and normalized overlap with required and preferred skills |
+| Semantic Fit | 25% | Cosine similarity between resume and job description embeddings |
+| Experience | 15% | Years of relevant work history and job title alignment |
+| Projects | 10% | Project descriptions and technical relevance |
+| Education | 5% | Highest degree attained and field of study |
+| Certifications | 5% | Industry recognized credentials |
+| Keywords | 5% | Job description keyword density in resume body |
 
-Then open **http://localhost:8000** in your browser.
-
-#### Option C: Docker Compose
-
-```bash
-docker-compose up --build
-```
-
----
-
-## ⚙️ How It Works
-
-### 1. Resume Upload & Parsing
-When you upload a PDF or TXT resume, the backend:
-- Extracts raw text using **PyMuPDF** (for PDFs) or direct UTF-8 decoding (for TXT)
-- Uses regex heuristics to extract: **Name**, **Email**, **Phone**, **Location**, **LinkedIn**, **GitHub**, **Portfolio URL**
-- Segments the resume into sections (Summary, Skills, Experience, Education, Projects, Certifications, Achievements) using header pattern matching
-- Normalizes extracted skills against a **160+ skill alias taxonomy** (e.g., `"k8s"` → `"Kubernetes"`, `"py"` → `"Python"`)
-
-### 2. Hybrid AI Matching
-The scoring engine computes **7 independent sub-scores**:
-
-| Sub-Score | Weight | Method |
-|-----------|--------|--------|
-| Skill Match | 35% | Set intersection of candidate skills vs. required + preferred |
-| Semantic Fit | 25% | Cosine similarity between resume & job description embeddings (`all-MiniLM-L6-v2`) |
-| Experience | 15% | Number of roles + job title match detection |
-| Projects | 10% | Presence of projects + technology overlap with job requirements |
-| Education | 5% | Degree type detection (Master's > Bachelor's > Other) |
-| Certifications | 5% | Presence of any industry certifications |
-| Keywords | 5% | Overlap with job description keywords |
-
-### 3. AI Explanation Generation
-After scoring, the AI provider generates:
-- **Fit Rating** (1-10 scale)
-- **Strengths** — Verified capabilities backed by resume data
-- **Skill Gaps** — Required skills missing from the resume
-- **Missing in Resume** — Expected sections, metrics, or credentials absent
-- **Recommendations** — Actionable suggestions to improve resume fit
-- **Experience Alignment** — How work history maps to the role
-
-### 4. Candidate Detail Dossier
-Each screened candidate gets a full profile with **6 tabs**:
-1. **Analytics & Radar** — Radar chart + score breakdown + strengths/gaps/missing/recommendations
-2. **Skills Evaluation** — Matched, missing, and additional skills visualized
-3. **Experience & Credentials** — Work history timeline + education
-4. **Fit Assessment** — Detailed match explanation + experience alignment
-5. **Interview Kit** — 5 auto-generated questions (skill-gap probing + technical deep-dive + behavioral)
-6. **Parsed Resume JSON** — Raw structured data extracted from the resume
-
----
-
-## 📡 API Reference
+## API Reference
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/screen` | Screen resumes against a job (multipart form: files + job_description) |
-| `GET` | `/api/candidates` | List all candidates with filters (search, min_score, session_id) |
-| `GET` | `/api/candidates/{id}` | Full candidate detail with parsed resume + screening analysis |
-| `GET` | `/api/candidates/{id}/interview-questions` | Generate tailored interview kit |
-| `GET` | `/api/candidates/{id}/outreach-email` | Generate recruiter outreach email draft |
-| `POST` | `/api/candidates/shortlist` | Toggle candidate shortlist status |
-| `POST` | `/api/candidates/compare` | Compare 2-4 candidates side-by-side |
-| `GET` | `/api/jobs` | List all job descriptions |
-| `POST` | `/api/jobs` | Create a new job description |
-| `DELETE` | `/api/jobs/{id}` | Delete a job description |
-| `GET` | `/api/dashboard/stats` | Aggregated dashboard statistics |
+|---|---|---|
+| POST | `/api/screen` | Upload resumes and screen against a job description |
+| GET | `/api/candidates` | Retrieve candidate list with filtering and search |
+| GET | `/api/candidates/{id}` | Detailed candidate profile and score breakdown |
+| GET | `/api/candidates/{id}/interview-questions` | Generate interview questions |
+| GET | `/api/candidates/{id}/outreach-email` | Generate candidate outreach email |
+| POST | `/api/candidates/shortlist` | Toggle shortlist status |
+| POST | `/api/candidates/compare` | Compare selected candidates |
+| GET | `/api/jobs` | List job postings |
+| POST | `/api/jobs` | Create a new job posting |
+| DELETE | `/api/jobs/{id}` | Delete a job posting |
+| GET | `/api/dashboard/stats` | Aggregated metrics for dashboard |
 
----
+## Configuration
 
-## 🖼 Screenshots
-
-### Landing Page
-Premium dark theme landing page with animated background orbs and feature highlights.
-![Landing Page](docs/screenshots/landing_page.png)
-
-### Dashboard Overview
-KPI summary cards (Total Screened, Avg Score, Shortlisted, Jobs Analyzed) + Score distribution chart + Skill gap analysis + Screening history table.
-
-### Resume Analytics
-Dedicated analytics intelligence report with score distribution, radar chart, skill coverage bars, gap frequency analysis, and actionable insights.
-![Resume Analytics](docs/screenshots/analytics_page.png)
-
-### Screen Resumes
-Upload multiple PDF/TXT resumes, select or create a job description, and get instant AI-powered match results.
-![Screen Resumes](docs/screenshots/screen_page.png)
-
-### Candidate Detail
-Full candidate dossier with radar chart, 7-dimension score breakdown, strengths, gaps, missing resume items, recommendations, interview kit, and outreach email generator.
-
----
-
-## 🔐 Environment Variables
-
-Create a `.env` file in the project root (copy from `.env.example`):
+Set environment variables in `.env`:
 
 ```env
-# Database (SQLite for local dev, PostgreSQL for production)
 DATABASE_URL=sqlite+aiosqlite:///./sql_app.db
-
-# AI Provider ("openai" or "local")
-# Set to "openai" and provide API key for GPT-powered explanations
-# Set to "local" for deterministic fallback (no API key needed)
 AI_PROVIDER=local
-AI_API_KEY=sk-your-openai-api-key-here
-
-# Server
+AI_API_KEY=
 PORT=8000
 HOST=0.0.0.0
 CORS_ORIGINS=http://localhost:5173,http://localhost:3000
-
-# Limits
 MAX_FILE_SIZE_MB=10
 MAX_RESUMES_PER_BATCH=20
 ```
 
----
-
-## 🚢 Deployment
-
-### Render (Backend)
-The project includes a `render.yaml` for one-click deployment to Render.
-
-### Vercel (Frontend)
-The project includes a `vercel.json` for deploying the frontend to Vercel.
+## Deployment
 
 ### Docker
+
 ```bash
 docker-compose up --build -d
 ```
 
----
+### Cloud Platforms
+- Backend configuration is provided in `render.yaml` for Render.
+- Frontend routing configuration is provided in `vercel.json` for Vercel.
 
-## 🤝 Contributing
+## License
 
-Contributions are welcome! Please follow these steps:
+This project is open source and available under the MIT License.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## Author
 
----
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
-## 👨‍💻 Author
-
-**Sai Praneeth Edupulapati**
-
+Sai Praneeth Edupulapati
 - GitHub: [@SaiPraneeth-E](https://github.com/SaiPraneeth-E)
 - Email: edupulapatisairpaneeth12345@gmail.com
-
----
-
-<div align="center">
-
-**Built with ❤️ using FastAPI, React, and AI**
-
-⭐ Star this repository if you found it useful!
-
-</div>

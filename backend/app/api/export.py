@@ -14,7 +14,6 @@ async def export_screening_results_csv(
     job_id: str = Query(...),
     db: AsyncSession = Depends(get_db)
 ):
-    """Export candidate screening report as CSV file for a given job."""
     j_res = await db.execute(select(Job).where(Job.id == job_id))
     job = j_res.scalar_one_or_none()
     if not job:
@@ -28,7 +27,6 @@ async def export_screening_results_csv(
     output = io.StringIO()
     writer = csv.writer(output)
     
-    # Header
     writer.writerow([
         "Rank", "Candidate Name", "Email", "Overall Match %", "Category", 
         "Recommendation", "Skill Score", "Semantic Fit", "Experience Score",

@@ -18,7 +18,6 @@ async def list_candidates(
     session_id: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db)
 ):
-    """Retrieve all candidates with search, score filtering, and shortlist status."""
     stmt = select(Candidate)
     
     if session_id:
@@ -37,7 +36,6 @@ async def list_candidates(
 
     cand_list = []
     for cand in candidates:
-        # Fetch latest screening result
         sr_res = await db.execute(
             select(ScreeningResult)
             .where(ScreeningResult.candidate_id == cand.id)
@@ -45,7 +43,6 @@ async def list_candidates(
         )
         latest_sr = sr_res.scalars().first()
 
-        # Fetch shortlist record
         sl_res = await db.execute(
             select(Shortlist).where(Shortlist.candidate_id == cand.id)
         )
@@ -100,19 +97,16 @@ async def list_candidates(
 
 @router.get("/{candidate_id}")
 async def get_candidate_detail(candidate_id: str, db: AsyncSession = Depends(get_db)):
-    """Retrieve complete candidate profile, parsed resume JSON, screening results, and radar chart metrics."""
     res = await db.execute(select(Candidate).where(Candidate.id == candidate_id))
     cand = res.scalars().first()
     if not cand:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidate not found.")
 
-    # Fetch resume
     r_res = await db.execute(
         select(Resume).where(Resume.candidate_id == candidate_id).order_by(Resume.created_at.desc())
     )
     resume = r_res.scalars().first()
 
-    # Fetch latest screening result with job info
     sr_res = await db.execute(
         select(ScreeningResult)
         .where(ScreeningResult.candidate_id == candidate_id)
@@ -127,7 +121,6 @@ async def get_candidate_detail(candidate_id: str, db: AsyncSession = Depends(get
         if job:
             job_title = job.title
 
-    # Check shortlist
     sl_res = await db.execute(select(Shortlist).where(Shortlist.candidate_id == candidate_id))
     is_shortlisted = sl_res.scalars().first() is not None
 
@@ -177,7 +170,6 @@ async def get_candidate_detail(candidate_id: str, db: AsyncSession = Depends(get
 
 @router.get("/{candidate_id}/interview-questions")
 async def get_tailored_interview_questions(candidate_id: str, db: AsyncSession = Depends(get_db)):
-    """Generate 5 tailored technical & skill-gap probing questions for hiring managers."""
     res = await db.execute(select(Candidate).where(Candidate.id == candidate_id))
     cand = res.scalars().first()
     if not cand:
@@ -195,7 +187,6 @@ async def get_tailored_interview_questions(candidate_id: str, db: AsyncSession =
 
     questions = []
     
-    # Skill gap probing questions
     for gap in missing[:2]:
         questions.append({
             "category": "Skill Gap Probing",
@@ -204,7 +195,6 @@ async def get_tailored_interview_questions(candidate_id: str, db: AsyncSession =
             "what_to_listen_for": f"Assess candidate's ability to quickly pick up {gap} or explain how they handled equivalent infrastructure challenges."
         })
 
-    # Technical deep dive questions
     for skill in matched[:2]:
         questions.append({
             "category": "Technical Deep Dive",
@@ -213,7 +203,6 @@ async def get_tailored_interview_questions(candidate_id: str, db: AsyncSession =
             "what_to_listen_for": f"Look for concrete production experience, performance tuning, and clear architectural reasoning with {skill}."
         })
 
-    # Behavioral & System Design Scenario
     questions.append({
         "category": "Behavioral & Production Ownership",
         "target_skill": "Production Systems",
@@ -230,7 +219,6 @@ async def get_tailored_interview_questions(candidate_id: str, db: AsyncSession =
 
 @router.get("/{candidate_id}/outreach-email")
 async def get_recruiter_outreach_email(candidate_id: str, db: AsyncSession = Depends(get_db)):
-    """Generate a personalized recruiter outreach email draft for shortlisted candidate."""
     res = await db.execute(select(Candidate).where(Candidate.id == candidate_id))
     cand = res.scalars().first()
     if not cand:
@@ -266,7 +254,6 @@ async def get_recruiter_outreach_email(candidate_id: str, db: AsyncSession = Dep
 
 @router.post("/shortlist", status_code=status.HTTP_200_OK)
 async def toggle_shortlist(req: ShortlistToggleRequest, db: AsyncSession = Depends(get_db)):
-    """Toggle candidate shortlist status."""
     res = await db.execute(select(Shortlist).where(Shortlist.candidate_id == req.candidate_id))
     existing = res.scalars().first()
 
@@ -283,7 +270,6 @@ async def toggle_shortlist(req: ShortlistToggleRequest, db: AsyncSession = Depen
 
 @router.post("/compare")
 async def compare_candidates(candidate_ids: List[str], db: AsyncSession = Depends(get_db)):
-    """Compare 2 to 4 candidates side-by-side."""
     if len(candidate_ids) < 2 or len(candidate_ids) > 4:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

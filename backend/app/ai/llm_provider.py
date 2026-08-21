@@ -21,7 +21,6 @@ class BaseAIProvider(ABC):
 
 
 class LocalFallbackAIProvider(BaseAIProvider):
-    """Deterministic fallback provider ensuring zero crashes when external LLM APIs are absent."""
 
     async def generate_explanation(
         self,
@@ -148,7 +147,7 @@ class OpenAIProvider(BaseAIProvider):
                     json={
                         "model": "gpt-3.5-turbo",
                         "messages": [
-                            {"role": "system", "content": "You are a professional AI HR screener. Return JSON output only."},
+                            {"role": "system", "content": "You are a professional technical recruiter. Return JSON output only."},
                             {"role": "user", "content": prompt}
                         ],
                         "response_format": {"type": "json_object"},
@@ -160,14 +159,13 @@ class OpenAIProvider(BaseAIProvider):
                     content = data["choices"][0]["message"]["content"]
                     parsed = json.loads(content)
                     
-                    # Ensure explanation maps to justification if justification is returned
                     if "justification" in parsed and "explanation" not in parsed:
                         parsed["explanation"] = parsed["justification"]
                         
                     parsed["is_llm"] = True
                     return parsed
-        except Exception as e:
-            print(f"OpenAI Explanation Call failed: {e}. Falling back.")
+        except Exception:
+            pass
 
         return await LocalFallbackAIProvider().generate_explanation(resume, job_data, scores, aux_data)
 

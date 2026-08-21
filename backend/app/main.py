@@ -9,10 +9,8 @@ from app.api import health, jobs, resumes, screen, candidates, dashboard, export
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize DB tables
     await init_db()
     yield
-    # Shutdown: cleanup logic if needed
 
 
 app = FastAPI(
@@ -22,7 +20,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
@@ -32,7 +29,6 @@ app.add_middleware(
 )
 
 
-# Production Error Handling: Structured JSON error responses
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
@@ -48,7 +44,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# Include Routers
 app.include_router(health.router, prefix=settings.API_V1_STR)
 app.include_router(jobs.router, prefix=settings.API_V1_STR)
 app.include_router(resumes.router, prefix=settings.API_V1_STR)
