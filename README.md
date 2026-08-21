@@ -382,15 +382,18 @@ Each screened candidate gets a full profile with **6 tabs**:
 
 ### Landing Page
 Premium dark theme landing page with animated background orbs and feature highlights.
+![Landing Page](docs/screenshots/landing_page.png)
 
 ### Dashboard Overview
 KPI summary cards (Total Screened, Avg Score, Shortlisted, Jobs Analyzed) + Score distribution chart + Skill gap analysis + Screening history table.
 
 ### Resume Analytics
 Dedicated analytics intelligence report with score distribution, radar chart, skill coverage bars, gap frequency analysis, and actionable insights.
+![Resume Analytics](docs/screenshots/analytics_page.png)
 
 ### Screen Resumes
 Upload multiple PDF/TXT resumes, select or create a job description, and get instant AI-powered match results.
+![Screen Resumes](docs/screenshots/screen_page.png)
 
 ### Candidate Detail
 Full candidate dossier with radar chart, 7-dimension score breakdown, strengths, gaps, missing resume items, recommendations, interview kit, and outreach email generator.
