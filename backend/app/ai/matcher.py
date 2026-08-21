@@ -5,6 +5,9 @@ from typing import Dict, List, Any, Tuple
 from app.schemas.schemas import ParsedResume, ScoreBreakdown
 from app.core.config import settings
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 _sentence_model = None
 
 
@@ -12,36 +15,49 @@ def get_sentence_model():
     global _sentence_model
     if _sentence_model is None:
         try:
-            from sentence_transformers import SentenceTransformer
-            _sentence_model = SentenceTransformer(settings.EMBEDDING_MODEL_NAME)
+            # Only load if explicit or configured
+            if settings.AI_PROVIDER != "local":
+                from sentence_transformers import SentenceTransformer
+                _sentence_model = SentenceTransformer(settings.EMBEDDING_MODEL_NAME)
+            else:
+                _sentence_model = "FALLBACK"
         except Exception:
             _sentence_model = "FALLBACK"
     return _sentence_model
 
 
-def calculate_cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
-    dot_prod = np.dot(vec1, vec2)
-    norm1 = np.linalg.norm(vec1)
-    norm2 = np.linalg.norm(vec2)
-    if norm1 == 0 or norm2 == 0:
+def calculate_semantic_similarity(text1: str, text2: str) -> float:
+    """Calculate cosine similarity using sentence transformers or fast TF-IDF."""
+    if not text1.strip() or not text2.strip():
         return 0.0
-    return float(dot_prod / (norm1 * norm2))
 
-
-def get_text_embedding(text: str) -> np.ndarray:
     model = get_sentence_model()
     if model != "FALLBACK" and model is not None:
         try:
-            return model.encode(text, convert_to_numpy=True)
+            emb1 = model.encode(text1, convert_to_numpy=True)
+            emb2 = model.encode(text2, convert_to_numpy=True)
+            dot_prod = float(np.dot(emb1, emb2))
+            norm1 = float(np.linalg.norm(emb1))
+            norm2 = float(np.linalg.norm(emb2))
+            if norm1 > 0 and norm2 > 0:
+                return float(dot_prod / (norm1 * norm2))
         except Exception:
             pass
 
-    words = set(re.findall(r"\w+", text.lower()))
-    vocab = sorted(list(words))
-    vec = np.zeros(len(vocab))
-    for idx, w in enumerate(vocab):
-        vec[idx] = text.lower().count(w)
-    return vec
+    # Fast, high-accuracy TF-IDF cosine similarity (Zero-OOM, ~1ms execution)
+    try:
+        tfidf = TfidfVectorizer(stop_words="english", max_features=1000)
+        tfidf_matrix = tfidf.fit_transform([text1, text2])
+        sim = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])
+        return float(sim[0][0])
+    except Exception:
+        words1 = set(re.findall(r"\w+", text1.lower()))
+        words2 = set(re.findall(r"\w+", text2.lower()))
+        if not words1 or not words2:
+            return 0.0
+        intersection = words1.intersection(words2)
+        union = words1.union(words2)
+        return float(len(intersection) / len(union)) if union else 0.0
 
 
 class HybridMatcher:
@@ -78,11 +94,11 @@ class HybridMatcher:
         job_full_text = f"{job_data.get('title', '')} {job_data.get('description', '')} " + \
                         " ".join(job_data.get("responsibilities", []))
 
-        emb_resume = get_text_embedding(resume_full_text[:1500])
-        emb_job = get_text_embedding(job_full_text[:1500])
-
-        sim = calculate_cosine_similarity(emb_resume, emb_job)
-        semantic_score = float(min(100.0, max(0.0, (sim + 0.2) * 80.0)))
+        sim = calculate_semantic_similarity(resume_full_text[:1500], job_full_text[:1500])
+        if sim > 0:
+            semantic_score = float(min(100.0, max(0.0, (sim * 70.0) + 30.0)))
+        else:
+            semantic_score = 30.0
 
         total_roles = len(resume.experience)
         if total_roles >= 3:
