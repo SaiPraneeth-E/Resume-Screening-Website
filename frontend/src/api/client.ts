@@ -10,10 +10,19 @@ import {
   OutreachEmailResponse
 } from '../types';
 
-const rawApiUrl = import.meta.env.VITE_API_URL || '/api';
-const API_BASE_URL = rawApiUrl.startsWith('http') || rawApiUrl.startsWith('/')
-  ? rawApiUrl
-  : `https://${rawApiUrl}/api`;
+const rawApiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || '/api';
+
+let formattedApiUrl = rawApiUrl;
+if (!formattedApiUrl.startsWith('http://') && !formattedApiUrl.startsWith('https://') && !formattedApiUrl.startsWith('/')) {
+  formattedApiUrl = `https://${formattedApiUrl}`;
+}
+
+// Ensure the base URL ends with /api (unless using relative '/api')
+if (formattedApiUrl.startsWith('http') && !formattedApiUrl.endsWith('/api') && !formattedApiUrl.includes('/api/')) {
+  formattedApiUrl = formattedApiUrl.replace(/\/+$/, '') + '/api';
+}
+
+const API_BASE_URL = formattedApiUrl;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
