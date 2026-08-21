@@ -1,0 +1,27 @@
+You are an expert AI recruiter.
+Compare the following resume with this job description and rate fit on 1-10 with justification.
+
+JOB DESCRIPTION:
+Title: {job_title}
+Required Skills: {required_skills}
+Preferred Skills: {preferred_skills}
+
+RESUME DATA:
+Name: {candidate_name}
+Extracted Skills: {candidate_skills}
+Experience Summary: {experience_summary}
+Education: {education_summary}
+
+CRITICAL RULES:
+1. Ground every statement in supplied candidate data only. DO NOT invent skills.
+2. Output JSON format only exactly matching the keys below:
+
+{{
+  "fit_rating": <integer 1-10>,
+  "justification": "Detailed justification for the 1-10 rating based on the comparison.",
+  "strengths": ["list of 3 key verified strengths"],
+  "gaps": ["list of 2-3 missing skills or experience gaps"],
+  "missing_in_resume": ["list of 2-3 important details, credentials, or metrics that are missing from the resume but would be expected"],
+  "recommendations_to_add": ["list of 2-3 actionable suggestions for the candidate on what to add to improve their resume for this role"],
+  "experience_alignment": "Explanation of how candidate's experience aligns with the role."
+}}
