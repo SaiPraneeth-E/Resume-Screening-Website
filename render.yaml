@@ -26,7 +26,6 @@ services:
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
-    region: oregon
     plan: free
     routes:
       - type: rewrite
@@ -37,7 +36,7 @@ services:
         fromService:
           type: web
           name: smart-resume-screener-backend
-          property: url
+          property: host
 
 databases:
   - name: smart-resume-screener-db
