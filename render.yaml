@@ -1,12 +1,12 @@
 services:
-  # Python FastAPI Backend Web Service
   - type: web
     name: smart-resume-screener-backend
     runtime: python
-    buildCommand: pip install -r backend/requirements.txt
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     region: oregon
-    plan: starter
+    plan: free
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
@@ -17,14 +17,17 @@ services:
         value: local
       - key: AI_API_KEY
         sync: false
+      - key: CORS_ORIGINS
+        value: "*"
 
-  # React Vite Frontend Web Service
   - type: web
     name: smart-resume-screener-frontend
     runtime: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: ./frontend/dist
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
     region: oregon
+    plan: free
     routes:
       - type: rewrite
         source: /*
@@ -37,9 +40,8 @@ services:
           property: url
 
 databases:
-  # Managed PostgreSQL Database
   - name: smart-resume-screener-db
     databaseName: resumescreener
     user: screener_user
     region: oregon
-    plan: starter
+    plan: free
